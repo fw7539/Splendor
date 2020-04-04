@@ -4,6 +4,8 @@ from tkinter import font
 from tkinter import messagebox
 import random
 from enum import Enum
+import socket
+import threading
 
 
 root = tk.Tk()
@@ -60,7 +62,7 @@ R = 'Ruby'
 O = 'Onyx'
 """
 
-CardsL1 = [
+cardsL1 = [
     #  Card(self, points, produces, cost_diamond, cost_sapphire, cost_emerald, cost_ruby, cost_onyx):
     #Card(0, E, d=0, s=0, e=0, r=0, o=0),
     Card(0, D, s=3),
@@ -107,10 +109,8 @@ CardsL1 = [
     Card(0, S, d=1, s=0, e=2, r=2, o=0),
 ]
 
-CardsL2 = [
+cardsL2 = [
     #  Card(self, points, produces, cost_diamond, cost_sapphire, cost_emerald, cost_ruby, cost_onyx):
-    #Card(2, E, d=0, s=0, e=0, r=0, o=0),
-    Card(1, O, d=3, e=3, o=2),
     Card(2, O, d=5),
     Card(1, S, s=2, e=2, r=3),
     Card(1, D, e=3, r=2, o=2),
@@ -140,10 +140,10 @@ CardsL2 = [
     Card(2, E, d=0, s=0, e=5, r=0, o=0),
     Card(2, E, d=2, s=0, e=0, r=1, o=4),
     Card(3, O, d=0, s=0, e=0, r=0, o=6),
-    Card(2, E, d=0, s=0, e=0, r=0, o=0),
 ]
 
-CardsL3 = [
+
+cardsL3 = [
     #  Card(self, points, produces, cost_diamond, cost_sapphire, cost_emerald, cost_ruby, cost_onyx):
     #Card(2, E, d=0, s=0, e=0, r=0, o=0),
     Card(5, D, d=3, s=0, e=0, r=0, o=7),
@@ -167,6 +167,7 @@ CardsL3 = [
     Card(4, R, d=0, s=3, e=6, r=3, o=0),
     Card(3, R, d=3, s=5, e=3, r=0, o=3),
 ]
+
 
 def key(event):
     print("pressed", repr(event.char))
@@ -202,7 +203,20 @@ for i in range(card_rows):
 
 print(pile)
 
-for i, card in enumerate(CardsL1):
+for i, card in enumerate(cardsL1):
     print("Card", i, "is", card)
+
+
+s = socket.socket()         # Create a socket object
+host = socket.gethostname() # Get local machine name
+port = 61111
+s.bind((host, port))        # Bind to the port
+
+s.listen(5)                 # Now wait for client connection.
+while True:
+   c, addr = s.accept()     # Establish connection with client.
+   print('Got connection from', addr)
+   c.send(b'Thank you for connecting')
+   c.close()                # Close the connection
 
 root.mainloop()
