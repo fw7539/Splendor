@@ -18,7 +18,7 @@ def key(event):
     print("pressed", repr(event.char))
 
 def callback(event):
-    print("clicked at", event.x, event.y)
+    print("callback: clicked at", event.x, event.y)
 
 #  This doesn't work for rectangles - they aren't tk Widgets
 def global_card_click_callback(self, event, card):
@@ -27,15 +27,21 @@ def global_card_click_callback(self, event, card):
 
 screen_objects = dict()
 
+DISPLAY_INFO = 0
+CARD_INFO = 1
+
 overlap_delta = 0
 def click_callback(event):
-    print("clicked at", event.x, event.y)
+    print("clic_callback: clicked at", event.x, event.y)
     overlap = canvas.find_overlapping(event.x-overlap_delta, event.y-overlap_delta, event.x+overlap_delta, event.y+overlap_delta)
     if overlap is not None:
         for sprite_id in overlap:
             print("found sprite ID: ", sprite_id)
-            print("Card display:", screen_objects[sprite_id][0])
-            print("Card:", screen_objects[sprite_id][1])
+            print("Card display:", screen_objects[sprite_id][DISPLAY_INFO])
+            card = screen_objects[sprite_id][CARD_INFO]
+            print("Card:", card)
+            #  Change the color from card back to card front for this sprite
+            canvas.itemconfig(sprite_id, fill=card_fronts[card.gem_produced])
 
 
 canvas = tk.Canvas(root, width=board_width, height=board_width)
@@ -63,12 +69,13 @@ for i in range(card_rows):
         id = canvas.create_rectangle(x, y, x+card_width, y+card_height, outline="black", fill=card_backs[i], width=2)
         card_disp = Card_display(id, x, y, card_width, card_height, card_backs[1], i, j)
         pile[i].append(card_disp)
-        #  FLAG:  need to select the card at random
-        #this_card = card_stacks[i].pop(random.randint(len(card_stacks(i))))
 
-        print("before popping card_stacks[%d] length is %d"%(i,len(card_stacks[i])))
-        this_card = card_stacks[i].pop()
-        print("after popping card_stacks[%d] length is %d"%(i,len(card_stacks[i])))
+        print("before popping card_stacks[%d] length is %d"%(i, len(card_stacks[i])))
+        #  FLAG:  need to select the card at random
+        rand_index = random.randint(0, len(card_stacks[i])-1)
+        #this_card = card_stacks[i].pop()
+        this_card = card_stacks[i].pop(rand_index)
+        print("after popping card_stacks[%d] length is %d"%(i, len(card_stacks[i])))
         print("this card is ", this_card)
 
         screen_objects[id] = (card_disp, this_card)
@@ -82,7 +89,7 @@ for i in range(card_rows):
     y += card_height + card_gap
     x = pile_start_loc_x
 
-print(pile)
+print("Card pile: ", pile)
 
 '''  Comment this out for now:
 for i, card in enumerate(cardsL1):
@@ -90,8 +97,10 @@ for i, card in enumerate(cardsL1):
 '''
 
 #  what is the difference between <1> and "<Button-1>"
+#  Does it matter whether this is here or earlier in the file?
 #canvas.bind("<1>", click_callback)
 
+'''  Change the colors with a click now
 # try changing colors of the cards
 print("Changing color of cards")
 front_colors = list(card_fronts.values())
@@ -111,6 +120,7 @@ for i in range(card_rows):
         canvas.itemconfig(pile[i][j].id, fill=pile[i][j].fill_color)
         print(pile[i][j])
         count += 1
+'''
 
 print("Printing pile:")
 print(pile)
