@@ -34,4 +34,5 @@ class Card_display:
         return f'Card_display(id={self.id}, x={self.x}, y={self.y}, card_width={self.card_width}, ' \
                f'card_height={self.card_height}, fill_color={self.fill_color}, row={self.row}, col={self.col})'
 
-
+    def card_click_callback(self, event):
+        print("clicked card grid [%d, %d] at event coords (%d, %d), color %s"%(self.row, self.col, event.x, event.y, self.fill_color))
