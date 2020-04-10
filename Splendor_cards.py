@@ -189,3 +189,4 @@ cardsL3 = [
     Card(3, R, d=3, s=5, e=3, r=0, o=3),
 ]
 
+card_stacks = [cardsL3, cardsL2, cardsL1]
