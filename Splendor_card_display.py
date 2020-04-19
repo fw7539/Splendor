@@ -18,7 +18,7 @@ card_gap = 10
 
 #  pile[i].append((id, x, y, card_width, card_height, card_backs[i], i, j))
 
-class Card_display:
+class Card_display():
     def __init__(self, id, x, y, card_width, card_height, fill_color, row=-1, col=-1):
         self.id = id
         self.x = x
