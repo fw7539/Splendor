@@ -103,6 +103,8 @@ ns_frame_height = pile_height // 2
 ew_frame_width = ns_frame_height    #  Make the box symetrical
 ew_frame_height = pile_height
 
+'''
+#  Doing this over with an initialization method - consider making a Frame subclass
 deck_frame = tk.Frame(root, width=pile_width, height=pile_height)
 deck_frame.grid(row=1, column=1)
 
@@ -121,6 +123,22 @@ east_frame.grid(row=1, column=2)
 west_frame = tk.Frame(root, width=ew_frame_width, height=ew_frame_height)
 tk.Label(west_frame, text="West Frame")
 west_frame.grid(row=1, column=0)
+'''
+least_grey = 96
+current_grey = least_grey   #  global - have to figure out how to make the equiv of a static int in C in Python
+
+def init_frame(frame_root, width, height, background, row, col, label=""):
+    new_frame = tk.Frame(frame_root, width=width, height=height, relief=RAISED, background=background)
+    new_frame.grid(row=row, column=col)
+    #  not sure how to get a text label for a Frame yet
+    return new_frame
+
+deck_frame = init_frame(root, pile_width, pile_height, "white", row=1, col=1)
+south_frame = init_frame(root, ns_frame_width, ns_frame_height, "grey96", row=2, col=1, label="South Frame")
+west_frame = init_frame(root, ew_frame_width, ew_frame_height, "grey86", row=1, col=0, label="West Frame")
+north_frame = init_frame(root, ns_frame_width, ns_frame_height, "grey76", row=0, col=1, label="North Frame")
+east_frame = init_frame(root, ew_frame_width, ew_frame_height, "grey66", row=1, col=2, label="East Frame")
+bank_frame = init_frame(root, ew_frame_width, ns_frame_height, "orchid1", row=2, col=0, label="Bank")
 
 player_one_frame = south_frame
 player_two_frame = None
