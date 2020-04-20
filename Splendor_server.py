@@ -195,20 +195,25 @@ print("Card pile: ", pile)
 #  this should really make bank...
 myFont = font.Font(family='Helvetica', size=12, weight='bold')
 
-def take_a_gem(num):
-    print(f"pressed, number is: {num}")
-
 BANK_COLS = 3
 resources = {}
+
+def take_a_gem(r_type):
+    #  global resource list "resources" contains:  resource_button, number, button_text
+    print(f"pressed, type is {r_type}, number is: {resources[r_type][1]}, text is '{resources[r_type][2].get()}'")
+    resources[r_type][1] -= 1
+    resources[r_type][2].set(f"{r_type:s}\n{resources[r_type][1]}")
+
 i = 0
 for resource_type, number in resource_limits.items():
     #print(f"resource {i}:  type is: {resource_type}, number is: {number}")
     button_text = tk.StringVar()
     button_text.set(f"{resource_type:s}\n{number}")
-    resource_button = Button(bank_frame, textvariable=button_text, font=myFont, command=lambda n=number: take_a_gem(n))
+    resource_button = Button(bank_frame, textvariable=button_text, font=myFont, )
     Button.config(resource_button, bg=resource_colors[resource_type][BG], fg=resource_colors[resource_type][FG])
     resource_button.grid(row=i//BANK_COLS, column=i%BANK_COLS)
     resources[resource_type] = [resource_button, number, button_text]
+    Button.config(resource_button, command=lambda r=resource_type: take_a_gem(r))
     i += 1
 
 
