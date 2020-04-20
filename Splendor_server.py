@@ -2,6 +2,7 @@ import tkinter as tk
 from Splendor_cards import *
 from Splendor_card_display import *
 from tkinter import font
+import tkinter.font as font
 from tkinter import messagebox
 from enum import Enum
 import socket
@@ -185,6 +186,38 @@ for i in range(card_rows):
 print("Card pile: ", pile)
 
 
+#  FLAG:  should have a class for Bank, subclass Frame
+#  FLAG:  should have a class for Resource, subclass of Button
+#       update (change the text)
+#       display
+#       verify that the request follows the rules
+#           needs to take a Player class as an argument
+#  this should really make bank...
+myFont = font.Font(family='Helvetica', size=12, weight='bold')
+
+def take_a_gem(num):
+    print(f"pressed, number is: {num}")
+
+BANK_COLS = 3
+resources = {}
+i = 0
+for resource_type, number in resource_limits.items():
+    #print(f"resource {i}:  type is: {resource_type}, number is: {number}")
+    button_text = tk.StringVar()
+    button_text.set(f"{resource_type:s}\n{number}")
+    resource_button = Button(bank_frame, textvariable=button_text, font=myFont, command=lambda n=number: take_a_gem(n))
+    Button.config(resource_button, bg=resource_colors[resource_type][BG], fg=resource_colors[resource_type][FG])
+    resource_button.grid(row=i//BANK_COLS, column=i%BANK_COLS)
+    resources[resource_type] = [resource_button, number, button_text]
+    i += 1
+
+
+def update_btn_text():
+    btn_text.set("b")
+
+btn_text = tk.StringVar()
+btn = tk.Button(root, textvariable=btn_text, command=update_btn_text)
+btn_text.set("a")
 
 '''  Comment this out for now:
 for i, card in enumerate(cardsL1):
