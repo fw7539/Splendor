@@ -46,6 +46,7 @@ S = 'Sapphire'
 E = 'Emerald'
 R = 'Ruby'
 O = 'Onyx'
+G = 'Gold'
 
 card_backs = ["green", "gold", "blue"]      #  index is card level
 
