@@ -48,6 +48,21 @@ R = 'Ruby'
 O = 'Onyx'
 G = 'Gold'
 
+resource_limits = {
+    D : 7, S : 7, E : 7, R : 7, O : 7, G : 5
+}
+
+BG = 0
+FG = 1
+resource_colors = {
+    D : ("SlateGray4", "white"),
+    S : ("blue", "white"),
+    E : ("green", "white"),
+    R : ("red", "white"),
+    O : ("brown4", "white"),
+    G : ("gold", "black"),
+}
+
 card_backs = ["green", "gold", "blue"]      #  index is card level
 
 card_fronts = {
