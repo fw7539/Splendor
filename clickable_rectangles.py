@@ -25,6 +25,7 @@ class Canvas(tkinter.Canvas):
                     return 'break'
                 
 
+#  call this Sprite?  or SpriteWrapper?  WidgetWrapper? It covers more than Rectangles.
 class Rectangle:
     __slots__=('canvas','id')
     def __init__(self, canvas, id_):
@@ -40,6 +41,42 @@ class Rectangle:
     def bbox(self):
         return self.canvas.bbox(self.id)
 
+
+def draw_text_on_rectangle(rect:Rectangle, *texts):
+    bbox=rect.bbox()
+    canvas=rect.canvas
+
+    debug_print("inside draw_text..., type of rect is: ", type(rect), " bbox is: ", bbox)
+
+    bottom_left_corner=(bbox[0]+11, bbox[3]-10)
+    ids=[]
+    for text in texts:
+        new_id=canvas.create_text(bottom_left_corner, text=text, anchor='sw', font=('helvetica', 16))
+        ids.append(new_id)
+        bbox=new_id.bbox()
+
+        debug_print("inside text loop, text is '", text, "', id is ", new_id, "type of rect is: ", type(rect), " bbox is: ", bbox)
+
+        bottom_left_corner = bbox[0]+1, bbox[1]+1 # TOP left corner of the text box, which will be the bottom left corner
+        # of the next textbox up.
+    return MultiSprite(canvas, rect.id, *ids)
+
+
+class MultiSprite:
+    def __init__(self, canvas, *ids):
+        self.canvas=canvas
+        self.ids=ids
+    def move(self, x, y):
+        for id in self.ids:
+            self.canvas.move(id, x, y)
+
+debug = False
+def debug_print(*args, **kwargs):
+    if (debug):
+        print(*args, **kwargs)
+
+
+
 if __name__=='__main__':
     window=tkinter.Tk()
     canvas=Canvas(window)
@@ -48,7 +85,11 @@ if __name__=='__main__':
         print("The rectangle was clicked")
         rect.config(fill='blue')
 
+    rect1 = canvas.create_rectangle(80, 60, 300, 200, fill='red')
+    rect1.bindToClick(say_hello)
+    debug_print("type of rect is: ", type(rect1), " bbox is: ", rect1.bbox())
+    draw_text_on_rectangle(rect1, 'Diamond', '2 VP', '1 Ruby', '1 Onyx', '1 Sapphire')
 
-    canvas.create_rectangle(80, 60, 300, 200, fill='red').bindToClick(say_hello)
+    # canvas.create_text(200, 80, text='card name').bindToClick(say_hello)
     window.mainloop()
     

@@ -76,7 +76,7 @@ class Card(tk.Canvas):
     def move_frame(self, new_frame):
         card_data = self.card_data
         self.grid_remove()
-        Card(player_one_frame,0,0,card_data) #  FLAG:  figure out x, y later
+        Card(new_frame,0,0,card_data) #  FLAG:  figure out x, y later
 
 
 #  There used to just be one Canvas that was the playing field.  Cards were rectangles.
