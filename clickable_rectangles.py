@@ -1,4 +1,6 @@
 import tkinter
+from Splendor_cards import *
+from Splendor_card_display import *
 
 class Canvas(tkinter.Canvas):
     def __init__(self, *args, **kw):
@@ -74,8 +76,9 @@ class WidgetWrapper:
         debug_print('rectangle_display', "inside draw_text..., type of self is: ", type(self), " bbox is: ", bbox)
 
         bottom_left_corner=(bbox[0]+11, bbox[3]-10) #  bbox returns 1 outside the object
-        #  added back a "reasonble indent", trial/error values
+                                                    #  added back a "reasonable indent", trial/error values
         ids=[]
+
         for text in texts:
             new_id=canvas.create_text(bottom_left_corner, text=text, anchor='sw', font=('helvetica', 16))
             ids.append(new_id)
@@ -88,25 +91,25 @@ class WidgetWrapper:
         self.text_sprites = MultiSprite(canvas, ids)
         debug_print('multi_sprite', "MultiSprite returned ", self.text_sprites)
 
-    def add_text_to_widget(self, text, x, y):
+    def add_text_to_widget(self, text, x, y, font=('helvetica', 14), anchor='nw'):
         # TODO:  change x, y into optional parameters that will mimic draw_text_on_widget behavior
         bbox=self.bbox()
         canvas=self.canvas
 
-        debug_print('rectangle_display', "inside draw_text..., type of self is: ", type(self), " bbox is: ", bbox)
+        debug_print('widget_add_text', f"text: '{text}', ({x}, {y})")
 
-        bottom_left_corner=(bbox[0]+11, bbox[3]-10) #  bbox returns 1 outside the object
-                                                    #  added back a "reasonble indent", trial/error values
-        ids=[]
-        for text in texts:
-            new_id=canvas.create_text(bottom_left_corner, text=text, anchor='sw', font=('helvetica', 16))
-            ids.append(new_id)
-            bbox=new_id.bbox()
+        top_left_corner = (bbox[0]+1, bbox[1]+1)    #  bbox returns 1 outside the object
+        position = (bbox[0]+1+x, bbox[1]+1+y)       #  bbox returns 1 outside the object
 
-            debug_print('rectangle_display', "text loop, text is '", text, "', id is ", new_id, "type of self is: ", type(self), " bbox is: ", bbox)
+        if hasattr(self, 'text_sprites'):
+            ids = self.text_sprites.get_ids()
+            debug_print('widget_add_text', f"text_sprites exists ids: {ids}")
+        else:
+            ids = []
+            debug_print('widget_add_text', f"text_sprites exists ids: {ids}")
 
-            bottom_left_corner = bbox[0]+1, bbox[1]+1 # TOP left corner of the text box, which will be the bottom left corner
-            # of the next textbox up.
+        new_id=canvas.create_text(position, text=text, anchor=anchor, font=font)
+        ids.append(new_id)
         self.text_sprites = MultiSprite(canvas, ids)
         debug_print('multi_sprite', "MultiSprite returned ", self.text_sprites)
 
@@ -123,6 +126,9 @@ class MultiSprite:
         for sprite_id in self.ids:
             self.canvas.move(sprite_id.id, x, y)
 
+    def get_ids(self):
+        return self.ids
+
     def __repr__(self):
         rv = ""
         for sprite_id in self.ids:
@@ -130,21 +136,73 @@ class MultiSprite:
             rv += str(sprite_id.id) + ", "
         return rv
 
+class Card:
+    def __init__(self, data, canvas, x, y):
+        self.data = data
+        self.canvas = canvas
+        self.x = x
+        self.y = y
+        #  will get a widget id in show()
+        self.show()
+
+    def show(self):
+        x, y = self.x, self.y
+        my_card_height = card_height * 0.6
+        card_widget = self.canvas.create_rectangle(x, y, x + card_width, y + my_card_height,
+                                                   outline="black", fill=card_fronts[self.data.gem_produced], width=2)
+        # FIXME:  There is a way to tell the height of a font programmatically.  Can have
+        #  the code here center the font in its region of the card without guess&check
+        if (self.data.victory_points > 0):
+            card_widget.add_text_to_widget(str(self.data.victory_points), edge_offset * 2, edge_offset,
+                                           font=('helvetica', 32))
+        card_widget.add_text_to_widget(self.data.gem_produced, card_width - 2 * edge_offset, 2 * edge_offset,
+                                       font=('helvetica', 20), anchor='ne')
+        #  Used to have victory point and card type location reversed.  Current way matches board game.
+        # rect2.add_text_to_widget('Diamond', edge_offset, edge_offset*2, font=('helvetica', 20))
+        # rect2.add_text_to_widget('2', card_width * 3 / 4, edge_offset, font=('helvetica', 32))
+
+        self.widget = card_widget
+
+        #  Now fill in the card cost information on the card - x, y are now card-relative, not canvas-relative
+        #  FIXME:  wouldn't hurt to make this its own method
+        x, y = cost_start_x, cost_start_y
+        debug_print('show', "data is: ", self.data, "cost is: ", self.data.cost)
+        for name, value in self.data.cost.items():
+            #  this did not work - the field width is font dependent; have to use
+            #  fixed width fonts for this.  Instead will put the # before the name
+            # rect2.add_text_to_widget(f"{name:{cost_field_width}s}:{value:2d}", x, y)
+            #  only display a resource if this card has a cost for that resource
+            if (value > 0):
+                card_widget.add_text_to_widget(f"{value:2d} {name}", x, y)
+                debug_print('show', f"placing value [{name}, {value}] at location ({x},{y})")
+
+            # increment location of position either way, so the cost for each resource is always in the same location
+            y += 20
+
+            # wrap the resource cost list when it gets too close to the bottom of the card
+            #  FIXME:  remove magic numbers when the look of the thing is right
+            if (y > 0.8 * my_card_height):
+                y = cost_start_y
+                x += card_width / 2 + edge_offset
+
+
 
 active_debug_levels = (
     # 'multi_sprite',
     # 'rectangle_display',
+    'widget_add_text',
+    'show',
 )
 
 def debug_print(debug_level, *args, **kwargs):
     if (debug_level in active_debug_levels):
-        print(*args, **kwargs)
+        print(debug_level, ":", *args, **kwargs)
 
 
 
 if __name__=='__main__':
     window=tkinter.Tk()
-    canvas=Canvas(window)
+    canvas=Canvas(window, width=board_width*1.5, height=board_height*1)
     canvas.pack()
     def say_hello(rect):
         rect.move(10,0)
@@ -152,12 +210,56 @@ if __name__=='__main__':
         rect.config(fill='blue')
         rect.move(10,0)
 
+    # messing about with what looks good
+    my_card_height = card_height * 0.6
 
-    rect1 = canvas.create_rectangle(80, 60, 300, 200, fill='red')
+    card_x, card_y = card_start_x, card_start_y = 80, 60
+    # rect1 = canvas.create_rectangle(card_x, card_y, 300, 200, fill='red')
+    rect1 = canvas.create_rectangle(card_x, card_y, card_x + card_width, card_y + my_card_height, fill='red')
     rect1.bindToClick(say_hello)
     debug_print('rectangle_display', "type of rect is: ", type(rect1), " bbox is: ", rect1.bbox())
     rect1.draw_text_on_widget('Diamond', '2 VP', '1 Ruby', '1 Onyx', '1 Sapphire')
 
+    # rect2 = canvas.create_rectangle(380, 260, 600, 400, fill='yellow')
+    i=0
+    card_gap = card_width // 8
+    # FIXME:  Could have a ternary operator here that increments y automatically when x is incremented over a line width
+    x, y = card_x + card_width + card_gap, card_y  # + (card_height + card_gap) if card_x > board_width # FIXME
+    rect2 = canvas.create_rectangle(x, y, x + card_width, y + my_card_height, outline="black", fill=card_backs[i], width=2)
+    # FIXME:  There is a way to tell the height of a font programmatically.  Can have
+    #  the code here center the font in its region of the card without guess&check
+    rect2.add_text_to_widget('2', edge_offset*2, edge_offset, font=('helvetica', 32))
+    rect2.add_text_to_widget('Diamond', card_width - 2 * edge_offset, 2 * edge_offset, font=('helvetica', 20), anchor='ne')
+    # rect2.add_text_to_widget('Diamond', edge_offset, edge_offset*2, font=('helvetica', 20))
+    # rect2.add_text_to_widget('2', card_width * 3 / 4, edge_offset, font=('helvetica', 32))
+
+    card = cardsL1[5]
+    cost_start_x, cost_start_y = edge_offset // 2, my_card_height // 2
+    cost_field_width = 9       #  a guess...
+    x, y = cost_start_x, cost_start_y
+    for name, value in card.cost.items():
+        #  this did not work - the field width is font dependent; have to use
+        #  fixed width fonts for this.  Instead will put the # before the name
+        # rect2.add_text_to_widget(f"{name:{cost_field_width}s}:{value:2d}", x, y)
+        if (value > 0):
+            rect2.add_text_to_widget(f"{value:2d} {name}", x, y)
+        y += 20
+        if (y > 0.8 * my_card_height):
+            y = cost_start_y
+            x += card_width / 2 + edge_offset
+
+    rect2.bindToClick(say_hello)
+
+    # put all the above in a method of the new Card class - give it a try:
+
+    #  start at left edge, one row down from whatever above did
+    x, y = card_start_x, card_y + my_card_height * 1.2
+    Card(cardsL2[14], canvas, x, y)
+    x += card_width + card_gap
+    Card(cardsL1[5], canvas, x, y)
+
+    # card_disp = Card_display(id, x, y, card_width, card_height, card_backs[1], i, j)
+    #
     # canvas.create_text(200, 80, text='card name').bindToClick(say_hello)
     window.mainloop()
     
