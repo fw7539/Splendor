@@ -30,7 +30,6 @@ card_gap = 10
 
 '''
 
-
 '''
 class Gems(Enum):
     D = 'Diamond'
@@ -49,29 +48,31 @@ O = 'Onyx'
 G = 'Gold'
 
 resource_limits = {
-    D : 7, S : 7, E : 7, R : 7, O : 7, G : 5
+    D: 7, S: 7, E: 7, R: 7, O: 7, G: 5
 }
 
 BG = 0
 FG = 1
 resource_colors = {
-    D : ("SlateGray4", "white"),
-    S : ("blue", "white"),
-    E : ("green", "white"),
-    R : ("red", "white"),
-    O : ("brown4", "white"),
-    G : ("gold", "black"),
+    D: ("SlateGray4", "white"),
+    S: ("blue", "white"),
+    E: ("green", "white"),
+    R: ("red", "white"),
+    O: ("brown4", "white"),
+    G: ("gold", "black"),
 }
 
-card_backs = ["green", "gold", "blue"]      #  index is card level
+card_backs = ["green", "gold", "blue"]  # index is card level
 
 card_fronts = {
-    D : "white",
-    S : "light blue",
-    E : "light green",
-    R : "pink",
-    O : "tan",
+    D: "white",
+    S: "light blue",
+    E: "light green",
+    R: "pink",
+    O: "tan",
 }
+
+gem_types = (D, S, E, R, O,)
 
 
 class Card_data:
@@ -83,12 +84,13 @@ class Card_data:
         self.ruby_cost = r
         self.diamond_cost = d
         self.onyx_cost = o
+        #  version 2:
+        self.cost = {E: e, S: s, D: d, R: r, O: o}  # order matters for display
         #  need a self.id as well
 
     def __repr__(self):
         return f'Card(v={self.victory_points}, g="{self.gem_produced}", e={self.emerald_cost}, s={self.sapphire_cost}, ' \
                f'r={self.ruby_cost}, d={self.diamond_cost}, o={self.onyx_cost})'
-
 
 
 multi_line_comment_about_Gem_letters = """
@@ -101,13 +103,13 @@ O = 'Onyx'
 
 cardsL1 = [
     #  Card(self, points, produces, cost_diamond, cost_sapphire, cost_emerald, cost_ruby, cost_onyx):
-    #Card(0, E, d=0, s=0, e=0, r=0, o=0),
+    # Card(0, E, d=0, s=0, e=0, r=0, o=0),
     Card_data(0, D, s=3),
     Card_data(0, D, d=0, s=2, e=2, r=0, o=1),
     Card_data(0, S, s=1, e=3, r=1),
     Card_data(0, S, e=2, o=2),
     Card_data(0, S, e=2, o=2),
-    Card_data(0, E, d=2, s=1),           # Card(v=0, g="Emerald", e=0, s=1, r=0, d=2, o=0),
+    Card_data(0, E, d=2, s=1),  # Card(v=0, g="Emerald", e=0, s=1, r=0, d=2, o=0),
     Card_data(0, E, d=0, s=1, e=0, r=2, o=2),
     Card_data(0, E, d=2, s=1),
     Card_data(0, E, d=1, s=1, e=0, r=1, o=2),
@@ -179,10 +181,9 @@ cardsL2 = [
     Card_data(3, O, d=0, s=0, e=0, r=0, o=6),
 ]
 
-
 cardsL3 = [
     #  Card(self, points, produces, cost_diamond, cost_sapphire, cost_emerald, cost_ruby, cost_onyx):
-    #Card(2, E, d=0, s=0, e=0, r=0, o=0),
+    # Card(2, E, d=0, s=0, e=0, r=0, o=0),
     Card_data(5, D, d=3, s=0, e=0, r=0, o=7),
     Card_data(5, O, d=0, s=0, e=0, r=7, o=3),
     Card_data(3, D, d=0, s=3, e=3, r=5, o=3),

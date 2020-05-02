@@ -1,6 +1,7 @@
 import tkinter
 from Splendor_cards import *
 from Splendor_card_display import *
+import random
 
 class Canvas(tkinter.Canvas):
     def __init__(self, *args, **kw):
@@ -39,10 +40,7 @@ class Canvas(tkinter.Canvas):
         for rect, callback in self.shapes_listening_for_callbacks:
             x1, y1, x2, y2 = self.bbox(rect.id)
             if x1 <= click_x <= x2 and y1 <= click_y <= y2:
-                event.x = click_x - x1
-                event.y = click_y - y1
-                if callback(rect)=='break':
-                    return 'break'
+                rect.move(event.x, event.y)
 
 
 #  call this Sprite?  or SpriteWrapper?  WidgetWrapper? It covers more than Rectangles.
@@ -54,6 +52,10 @@ class WidgetWrapper:
 
     def bindToClick(self, function):
         self.canvas.shapes_listening_for_callbacks.append((self, function))
+
+    def bindToDrag(self, function):
+        self.canvas.shapes_listening_for_callbacks.append((self, function))
+        # FIXME:  you should be able to register click and drag events separately
 
     def config(self, **kw):
         self.canvas.itemconfig(self.id, **kw)
@@ -190,9 +192,12 @@ class Card:
 active_debug_levels = (
     # 'multi_sprite',
     # 'rectangle_display',
-    'widget_add_text',
+    # 'widget_add_text',
     'show',
+    'card_pile',
+    'drag_event',
 )
+DEBUG_SEARCH_HERE = active_debug_levels
 
 def debug_print(debug_level, *args, **kwargs):
     if (debug_level in active_debug_levels):
@@ -210,6 +215,9 @@ if __name__=='__main__':
         rect.config(fill='blue')
         rect.move(10,0)
 
+    def drag_event(event):
+        debug_print('drag_event', f"drag event at coords ({event.x}, {event.y})")
+
     # messing about with what looks good
     my_card_height = card_height * 0.6
 
@@ -223,10 +231,10 @@ if __name__=='__main__':
     # rect2 = canvas.create_rectangle(380, 260, 600, 400, fill='yellow')
     i=0
     card_gap = card_width // 8
-    # FIXME:  Could have a ternary operator here that increments y automatically when x is incremented over a line width
+    # TODO:  Could have a ternary operator here that increments y automatically when x is incremented over a line width
     x, y = card_x + card_width + card_gap, card_y  # + (card_height + card_gap) if card_x > board_width # FIXME
     rect2 = canvas.create_rectangle(x, y, x + card_width, y + my_card_height, outline="black", fill=card_backs[i], width=2)
-    # FIXME:  There is a way to tell the height of a font programmatically.  Can have
+    # TODO:  There is a way to tell the height of a font programmatically.  Can have
     #  the code here center the font in its region of the card without guess&check
     rect2.add_text_to_widget('2', edge_offset*2, edge_offset, font=('helvetica', 32))
     rect2.add_text_to_widget('Diamond', card_width - 2 * edge_offset, 2 * edge_offset, font=('helvetica', 20), anchor='ne')
@@ -252,11 +260,43 @@ if __name__=='__main__':
 
     # put all the above in a method of the new Card class - give it a try:
 
-    #  start at left edge, one row down from whatever above did
-    x, y = card_start_x, card_y + my_card_height * 1.2
+    #  Quick test:
+    '''
     Card(cardsL2[14], canvas, x, y)
     x += card_width + card_gap
     Card(cardsL1[5], canvas, x, y)
+    '''
+
+    #  start at left edge, one row down from whatever above did
+    pile_start_loc_x, pile_start_loc_y = card_start_x, card_y + my_card_height * 1.2
+    x, y = pile_start_loc_x, pile_start_loc_y
+    pile = [[] for i in range(card_rows)] # TODO:  how do I declare this?  Do I need to?
+
+
+    def row_to_y(row):
+        return row * (my_card_height + card_gap) + pile_start_loc_y # FIXME: fix my_card_height stuff
+    def col_to_x(col):
+        return col * (card_width + card_gap) + pile_start_loc_x
+    # Display the up cards on the table
+    for i in range(card_rows):
+        for j in range(card_cols):
+            rand_index = random.randint(0, len(card_stacks[i]) - 1)
+            this_card = card_stacks[i].pop(rand_index)
+            debug_print('create_card_stack', "after popping card_stacks[%d] length is %d" % (i, len(card_stacks[i])))
+            debug_print('create_card_stack', "this card is ", this_card)
+
+            Card(this_card, canvas, col_to_x(j), row_to_y(i))
+
+            pile[i].append(this_card)
+
+            #        screen_objects[id] = (card_disp, this_card)
+
+            #  the method below doesn't work when the cards are represented by rectangles.
+            #  Rectangles are not Widgets, they are just drawings - represented by an int, not an Object
+            #  In theory, if I made the cards Labels or Canvases the code below would work
+            #  bind a click event for this object (a placed card) with an Obj ID and a Card class instance
+
+    debug_print('card_pile', "Card pile: ", pile)
 
     # card_disp = Card_display(id, x, y, card_width, card_height, card_backs[1], i, j)
     #
