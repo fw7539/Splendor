@@ -10,11 +10,27 @@
 board_height = 800
 board_width = 800
 
-card_height = 150
-card_width = 100
+# card_height = 150
+# card_width = 100
+card_height = 250
+card_width = 200
 card_cols = 4
 card_rows = 3
 card_gap = 10
+
+edge_offset = 10
+
+# put the pile in the middle of the board
+pile_width = card_width * card_cols + card_gap * (card_cols - 1)
+pile_start_loc_x = (board_width - pile_width) / 2
+pile_height = card_height * card_rows + card_gap * (card_rows - 1)
+pile_start_loc_y = (board_height - pile_height) / 2
+
+ns_frame_width = pile_width
+ns_frame_height = pile_height // 2
+
+ew_frame_width = ns_frame_height    #  Make the box symetrical
+ew_frame_height = pile_height
 
 #  pile[i].append((id, x, y, card_width, card_height, card_backs[i], i, j))
 
