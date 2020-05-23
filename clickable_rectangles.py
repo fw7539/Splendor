@@ -3,13 +3,70 @@ from Splendor_cards import *
 from Splendor_card_display import *
 import random
 
+
+# TODO:  should this be a member function of Canvas or WidgetWrapper?
+def drag_callback(widget, card_relative_x, card_relative_y):
+    debug_print('drag_event', f"drag event at coords ({card_relative_x}, {card_relative_y})")
+
+
 class Canvas(tkinter.Canvas):
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
         self.shapes_listening_for_callbacks=[]
         self.bind('<Button-1>', self.onClick)
-        # self.bind('<B1-Motion>', self.onDrag)
+        self.bind('<B1-Motion>', self.onDrag)
+        self.bind('<ButtonRelease-1>', self.onRelease)
+        # FLAG:  more info on drag/drop here:
+        # https://stackoverflow.com/questions/44887576/how-can-i-create-a-drag-and-drop-interface
+        '''
+        #  code segments for bound callbacks:
+        # Tkinter doesn't have any direct support for drag and drop within an application. However, drag and drop requires not much more than making suitable bindings for a button click (<ButtonPress-1>), the mouse moving while the button is clicked (<B1-Motion>), and when the button is released (<ButtonRelease-1>).
+        # Here is a very simplestic example which is designed to work with your code.
+        # First, we'll create a class that can manage the dragging and dropping. It's easier to do this as a class rather than a collection of global functions.
+
+        class DragManager():
+            def add_dragable(self, widget):
+                widget.bind("<ButtonPress-1>", self.on_start)
+                widget.bind("<B1-Motion>", self.on_drag)
+                widget.bind("<ButtonRelease-1>", self.on_drop)
+                widget.configure(cursor="hand1")
+
+            def on_start(self, event):
+                # you could use this method to create a floating window
+                # that represents what is being dragged.
+                pass
+
+            def on_drag(self, event):
+                # you could use this method to move a floating window that
+                # represents what you're dragging
+                pass
+
+            def on_drop(self, event):
+                # find the widget under the cursor
+                x,y = event.widget.winfo_pointerxy()
+                target = event.widget.winfo_containing(x,y)
+                try:
+                    target.configure(image=event.widget.cget("image"))
+                except:
+                    pass
+                
+        #  enable drag and drop in main:
+        label = Label(canvas, image=image)
+        ...
+        dnd = DragManager()
+        dnd.add_dragable(label)
+        ...
+        root.mainloop()
+        '''
+    #  See also:
+    #  More on drag and drop:
+    # https://www.quora.com/How-can-I-drag-and-drop-widgets-in-Tkinter-using-Python-3-6?share=1
+    #
+    #  List of all tkinter events:
+    #  https://stackoverflow.com/questions/32289175/list-of-all-tkinter-events
+
     '''
+    #  Other tkinter mouse click examples, from Doug's floop code, for reference
     ('<B1-Motion>', "'LEFT drag %3d, %3d' % (e.x, e.y)"),
     ('<B3-Motion>', "'%3d, %3d drag RIGHT' % (e.x, e.y)")
     '''
@@ -26,10 +83,14 @@ class Canvas(tkinter.Canvas):
         click_x, click_y = event.x, event.y
         for rect, callback in self.shapes_listening_for_callbacks:
             x1, y1, x2, y2 = self.bbox(rect.id)
+            debug_print('onClick', f"event is {event}, keysym: {event.keysym}, delta: {event.delta}, char: {event.char}, "
+                                   f"keycode: {event.keycode}, type {event.type}, x_root: {event.x_root}, y_root: {event.y_root}, "
+                                   f"dir(event) is:", dir(event))
             if x1 <= click_x <= x2 and y1 <= click_y <= y2:
-                event.x = click_x - x1
-                event.y = click_y - y1
-                if callback(rect) == 'break':
+                rect.set_inflight(False)
+                # event.x = click_x - x1    # FLAG:  this seems to be messing up
+                # event.y = click_y - y1
+                if callback(rect, click_x - x1, click_y - y1) == 'break':
                     return 'break'
 
 
@@ -40,15 +101,32 @@ class Canvas(tkinter.Canvas):
         for rect, callback in self.shapes_listening_for_callbacks:
             x1, y1, x2, y2 = self.bbox(rect.id)
             if x1 <= click_x <= x2 and y1 <= click_y <= y2:
-                rect.move(event.x, event.y)
+                rect.set_inflight(True)
+                if callback(rect, click_x - x1, click_y - y1) == 'break':
+                    return 'break'
+
+    def onRelease(self, event):
+        if event.x is None:
+            return
+        click_x, click_y = event.x, event.y
+        for rect, callback in self.shapes_listening_for_callbacks:
+            x1, y1, x2, y2 = self.bbox(rect.id)
+            if x1 <= click_x <= x2 and y1 <= click_y <= y2:
+                if (rect.get_inflight()):
+                    self.move(x1, y1)       #  Move takes (delta x, delta y)
+
+                if callback(rect, click_x - x1, click_y - y1) == 'break':
+                    return 'break'
+
 
 
 #  call this Sprite?  or SpriteWrapper?  WidgetWrapper? It covers more than Rectangles.
 class WidgetWrapper:
-    __slots__=('canvas','id', 'text_sprites')
+    __slots__=('canvas','id', 'text_sprites', 'in_flight')
     def __init__(self, canvas, id_):
         self.canvas=canvas
         self.id=id_
+        self.in_flight = False
 
     def bindToClick(self, function):
         self.canvas.shapes_listening_for_callbacks.append((self, function))
@@ -56,6 +134,7 @@ class WidgetWrapper:
     def bindToDrag(self, function):
         self.canvas.shapes_listening_for_callbacks.append((self, function))
         # FIXME:  you should be able to register click and drag events separately
+        #  Can just add "event type" to this tuple - is there a way to do that generically?
 
     def config(self, **kw):
         self.canvas.itemconfig(self.id, **kw)
@@ -68,6 +147,12 @@ class WidgetWrapper:
         if (hasattr(self, 'text_sprites')):
             debug_print('multi_sprite', f"calling text_sprites.move({x},{y})")
             self.text_sprites.move(x, y)
+
+    def set_inflight(self, value):
+        self.in_flight = value
+
+    def get_inflight(self):
+        return self.in_flight
 
 
     #def draw_text_on_rectangle(rect:Rectangle, *texts):
@@ -187,15 +272,21 @@ class Card:
                 y = cost_start_y
                 x += card_width / 2 + edge_offset
 
+        # make it dragable
+        #  FLAG:
+        # self.widget.bindToDrag(drag_callback)
+
+
 
 
 active_debug_levels = (
     # 'multi_sprite',
     # 'rectangle_display',
-    # 'widget_add_text',
-    'show',
-    'card_pile',
+    'widget_add_text',
+    # 'show',
+    # 'card_pile',
     'drag_event',
+    'onClick'
 )
 DEBUG_SEARCH_HERE = active_debug_levels
 
@@ -209,16 +300,11 @@ if __name__=='__main__':
     window=tkinter.Tk()
     canvas=Canvas(window, width=board_width*1.5, height=board_height*1)
     canvas.pack()
-    def say_hello(rect):
-        rect.move(10,0)
+    def say_hello(rect, *args):
+        # rect.move(10,0)
         print("The rectangle was clicked")
         rect.config(fill='blue')
-        rect.move(10,0)
 
-    def drag_event(event):
-        debug_print('drag_event', f"drag event at coords ({event.x}, {event.y})")
-
-    # messing about with what looks good
     my_card_height = card_height * 0.6
 
     card_x, card_y = card_start_x, card_start_y = 80, 60
@@ -243,20 +329,24 @@ if __name__=='__main__':
 
     card = cardsL1[5]
     cost_start_x, cost_start_y = edge_offset // 2, my_card_height // 2
-    cost_field_width = 9       #  a guess...
+    cost_field_width = 8       #  a guess...
     x, y = cost_start_x, cost_start_y
     for name, value in card.cost.items():
         #  this did not work - the field width is font dependent; have to use
         #  fixed width fonts for this.  Instead will put the # before the name
-        # rect2.add_text_to_widget(f"{name:{cost_field_width}s}:{value:2d}", x, y)
-        if (value > 0):
-            rect2.add_text_to_widget(f"{value:2d} {name}", x, y)
+        print_all_values = False
+        if (print_all_values):
+            rect2.add_text_to_widget(f"{name:{cost_field_width}}:{value:d}", x, y)
+        else:
+            if (value > 0):
+                rect2.add_text_to_widget(f"{value:2d} {name}", x, y)
         y += 20
         if (y > 0.8 * my_card_height):
             y = cost_start_y
             x += card_width / 2 + edge_offset
 
-    rect2.bindToClick(say_hello)
+    # rect2.bindToClick(say_hello)
+    rect2.bindToDrag(drag_callback)
 
     # put all the above in a method of the new Card class - give it a try:
 
@@ -302,4 +392,3 @@ if __name__=='__main__':
     #
     # canvas.create_text(200, 80, text='card name').bindToClick(say_hello)
     window.mainloop()
-    
