@@ -10,6 +10,7 @@ import threading
 import random
 from hover import *
 
+
 root = tk.Tk()
 
 player_one_frame = None
@@ -91,18 +92,6 @@ class Card(tk.Canvas):
 # canvas.bind("<Button-1>", click_callback)
 # canvas.grid()
 
-
-# put the pile in the middle of the board
-pile_width = card_width * card_cols + card_gap * (card_cols - 1)
-pile_start_loc_x = (board_width - pile_width) / 2
-pile_height = card_height * card_rows + card_gap * (card_rows - 1)
-pile_start_loc_y = (board_height - pile_height) / 2
-
-ns_frame_width = pile_width
-ns_frame_height = pile_height // 2
-
-ew_frame_width = ns_frame_height    #  Make the box symetrical
-ew_frame_height = pile_height
 
 '''
 #  Doing this over with an initialization method - consider making a Frame subclass

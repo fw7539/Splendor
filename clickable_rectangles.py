@@ -20,9 +20,14 @@ class Canvas(tkinter.Canvas):
         # https://stackoverflow.com/questions/44887576/how-can-i-create-a-drag-and-drop-interface
         '''
         #  code segments for bound callbacks:
-        # Tkinter doesn't have any direct support for drag and drop within an application. However, drag and drop requires not much more than making suitable bindings for a button click (<ButtonPress-1>), the mouse moving while the button is clicked (<B1-Motion>), and when the button is released (<ButtonRelease-1>).
+        # Tkinter doesn't have any direct support for drag and drop within an application. 
+        # However, drag and drop requires not much more than making suitable 
+        # bindings for a button click (<ButtonPress-1>), the mouse moving while the button
+        # is clicked (<B1-Motion>), and when the button is released ( <ButtonRelease-1>).
         # Here is a very simplestic example which is designed to work with your code.
-        # First, we'll create a class that can manage the dragging and dropping. It's easier to do this as a class rather than a collection of global functions.
+        # First, we'll create a class that can manage the dragging and dropping. 
+        # It's easier to do this as a class rather than a collection of 
+        # global functions.
 
         class DragManager():
             def add_dragable(self, widget):
@@ -83,9 +88,11 @@ class Canvas(tkinter.Canvas):
         click_x, click_y = event.x, event.y
         for rect, callback in self.shapes_listening_for_callbacks:
             x1, y1, x2, y2 = self.bbox(rect.id)
-            debug_print('onClick', f"event is {event}, keysym: {event.keysym}, delta: {event.delta}, char: {event.char}, "
-                                   f"keycode: {event.keycode}, type {event.type}, x_root: {event.x_root}, y_root: {event.y_root}, "
-                                   f"dir(event) is:", dir(event))
+            debug_print('onClick', f"event is {event}, keysym: {event.keysym}, "
+                           f"delta: {event.delta}, char: {event.char}, "
+                           f"keycode: {event.keycode}, type {event.type}, "
+                           f"x_root: {event.x_root}, y_root: {event.y_root}, "
+                           f"dir(event) is:", dir(event))
             if x1 <= click_x <= x2 and y1 <= click_y <= y2:
                 rect.set_inflight(False)
                 # event.x = click_x - x1    # FLAG:  this seems to be messing up
@@ -112,7 +119,7 @@ class Canvas(tkinter.Canvas):
         for rect, callback in self.shapes_listening_for_callbacks:
             x1, y1, x2, y2 = self.bbox(rect.id)
             if x1 <= click_x <= x2 and y1 <= click_y <= y2:
-                if (rect.get_inflight()):
+                if rect.get_inflight():
                     self.move(x1, y1)       #  Move takes (delta x, delta y)
 
                 if callback(rect, click_x - x1, click_y - y1) == 'break':
@@ -120,7 +127,8 @@ class Canvas(tkinter.Canvas):
 
 
 
-#  call this Sprite?  or SpriteWrapper?  WidgetWrapper? It covers more than Rectangles.
+#  FIXME:  call this Sprite?  or SpriteWrapper?  WidgetWrapper? It covers more
+#  than Rectangles.  Maybe ShapeWrapper.
 class WidgetWrapper:
     __slots__=('canvas','id', 'text_sprites', 'in_flight')
     def __init__(self, canvas, id_):
@@ -144,7 +152,7 @@ class WidgetWrapper:
 
     def move(self, x, y):
         self.canvas.move(self.id, x, y)
-        if (hasattr(self, 'text_sprites')):
+        if hasattr(self, 'text_sprites'):
             debug_print('multi_sprite', f"calling text_sprites.move({x},{y})")
             self.text_sprites.move(x, y)
 
@@ -239,7 +247,7 @@ class Card:
                                                    outline="black", fill=card_fronts[self.data.gem_produced], width=2)
         # FIXME:  There is a way to tell the height of a font programmatically.  Can have
         #  the code here center the font in its region of the card without guess&check
-        if (self.data.victory_points > 0):
+        if self.data.victory_points > 0:
             card_widget.add_text_to_widget(str(self.data.victory_points), edge_offset * 2, edge_offset,
                                            font=('helvetica', 32))
         card_widget.add_text_to_widget(self.data.gem_produced, card_width - 2 * edge_offset, 2 * edge_offset,
@@ -259,7 +267,7 @@ class Card:
             #  fixed width fonts for this.  Instead will put the # before the name
             # rect2.add_text_to_widget(f"{name:{cost_field_width}s}:{value:2d}", x, y)
             #  only display a resource if this card has a cost for that resource
-            if (value > 0):
+            if value > 0:
                 card_widget.add_text_to_widget(f"{value:2d} {name}", x, y)
                 debug_print('show', f"placing value [{name}, {value}] at location ({x},{y})")
 
@@ -268,7 +276,7 @@ class Card:
 
             # wrap the resource cost list when it gets too close to the bottom of the card
             #  FIXME:  remove magic numbers when the look of the thing is right
-            if (y > 0.8 * my_card_height):
+            if y > 0.8 * my_card_height:
                 y = cost_start_y
                 x += card_width / 2 + edge_offset
 
@@ -291,7 +299,7 @@ active_debug_levels = (
 DEBUG_SEARCH_HERE = active_debug_levels
 
 def debug_print(debug_level, *args, **kwargs):
-    if (debug_level in active_debug_levels):
+    if debug_level in active_debug_levels:
         print(debug_level, ":", *args, **kwargs)
 
 
@@ -335,13 +343,13 @@ if __name__=='__main__':
         #  this did not work - the field width is font dependent; have to use
         #  fixed width fonts for this.  Instead will put the # before the name
         print_all_values = False
-        if (print_all_values):
+        if print_all_values:
             rect2.add_text_to_widget(f"{name:{cost_field_width}}:{value:d}", x, y)
         else:
-            if (value > 0):
+            if value > 0:
                 rect2.add_text_to_widget(f"{value:2d} {name}", x, y)
         y += 20
-        if (y > 0.8 * my_card_height):
+        if y > 0.8 * my_card_height:
             y = cost_start_y
             x += card_width / 2 + edge_offset
 

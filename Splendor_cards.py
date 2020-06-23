@@ -51,6 +51,69 @@ resource_limits = {
     D: 7, S: 7, E: 7, R: 7, O: 7, G: 5
 }
 
+class ResourceSet():
+    def __init__(self):
+
+
+def display_error(*args):
+    print(*args)
+
+class Bank():
+    def __init__(self):
+        self.resources = {
+            E: resource_limits[E],
+            S: resource_limits[S],
+            D: resource_limits[D],
+            R: resource_limits[R],
+            O: resource_limits[O],
+            G: resource_limits[G],
+        }
+        # TODO:  Add something for error output - need something to let me
+        #  update text on a message text box from the text box class
+        #  not sure how to do that in Python
+
+    def withdraw(self, type):
+        if self.resources[type] <= 0:
+            return False
+        self.resource[type] -= 1
+        return True
+
+    def deposit(self, type):
+        if (self.resources[type] >= resource_limits[type]):
+            raise ValueError(f"Returned resource of type {type} "
+                             f"exceeded game limits")
+
+    #  type_set argument is a dictionary of <string> Resource: <int> Number
+    #  entries
+    def withdraw_set(self, type_set):
+        #  Have to have available resources for *all* of the resources in the
+        #  set.  I don't see a good way to avoid going through the list twice
+        #  TODO:  Find a better way to do this
+        for type, num in type_set:
+            if self.resources[type] <= num:
+                display_error(f"Unable to withdraw {num} {type}(s); only "
+                              f"{self.resources[type]} available.")
+                return False
+
+        for type, num in type_set:
+            self.resouces[type] -= num
+
+        return True
+
+    def deposit_set(self, type_set):
+        #  Have to have available resources for *all* of the resources in the
+        #  set.  I don't see a good way to avoid going through the list twice
+        #  TODO:  Find a better way to do this
+        for type, num in type_set:
+            if (self.resources[type] >= resource_limits[type]):
+                raise ValueError(f"Returned resource of type {type} "
+                                 f"exceeded game limits")
+
+        for type, num in type_set:
+            self.resouces[type] += num
+
+        return True
+
 BG = 0
 FG = 1
 resource_colors = {
